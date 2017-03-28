@@ -1,29 +1,25 @@
-apache_tomcat node['apache_tomcat']['home'] do
-
-              mirror node['apache_tomcat']['mirror']
-              version node['apache_tomcat']['version']
-
+package 'tomcat' do
+   action :install
 end
 
-group node['apache_tomcat']['group'] do
-              system true
-              only_if { node['apache_tomcat']['create_service_user'] }
-
+package 'tomcat-webapps' do
+   action :install
 end
 
-user node['apache_tomcat']['user'] do
-  comment 'Tomcat Service User'
-  system true
-  group node['apache_tomcat']['group']
-  shell '/bin/false'
-  only_if { node['apache_tomcat']['create_service_user'] }
+package 'tomcat-admin-webapps' do
+   action :install
+end 
 
+service 'start'
+ action [:start, :enable]
+only_if do file.exit ('/usr/share/tomcat/webapps/ROOT/index.jsp')
+end
+
+service 'tomcat' do
+  action [:stop]
 end
 
 
-apache_tomcat_instance 'base' do
-  %w(base shutdown_port http_port ajp_port ssl_port jmx_port debug_port).each do |a|
-    send(a, node['apache_tomcat'][a]) unless node['apache_tomcat'][a].nil?
-  end
-  only_if { node['apache_tomcat']['run_base_instance'] }
-end
+
+
+
